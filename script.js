@@ -28,6 +28,9 @@ const BRICKS = [
   },
 ];
 
+var stripe = stripe(
+"pk_test_51MjC2gGv9xGuGlM2pxnNVnDjPms6u1PEiMFPNJOymkcr9hKDmBBqk7PEFd0FzmEfNEfAySM9DD01vh4T7JjDbSDx00xRMxJZfK"
+);
 
 for (var i = 0; i < BRICKS.length; i++) {
   let newBrick = document.createElement("div");
@@ -52,6 +55,7 @@ for (var i = 0; i < BRICKS.length; i++) {
   newBrickButton.id = i;
   newBrickButton.className = "button is-dark";
   newBrickButton.innerHTML = "Buy this brick";
+  newBrickButton.onclick = buttonClick;
 
   newBrickArticle.appendChild(newBrickTitle);
   newBrickArticle.appendChild(newBrickDesc);
@@ -61,6 +65,50 @@ for (var i = 0; i < BRICKS.length; i++) {
   newBrick.appendChild(newBrickArticle);
   document.getElementById("bricks").appendChild(newBrick);
 }
+
+async function buttonClick(event) {
+  event = event || window.event;
+  var target = event.target || event.srcElement;
+
+  var id = target.id;
+  let i = parseInt(id);
+
+  const API_URL = "https://stripe-checkout-server.codeguyty.repl.co";
+  
+  return fetch(API_URL + "/create-checkout-session", {
+    method: "POST",
+    mode: 'cors',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      name: BRICKS[i].name,
+      images: BRICKS[i].images,
+      desc: BRICKS[i].desc,
+      price: BRICKS[i].cost * 100,
+    }),
+  })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (session) {
+      return stripe.redirectToCheckout({ sessionId: session.id});
+    })
+    .then(function (result){
+      // If redirectToCheckout fails due to a browser or network
+      // error, you should display the localized error message to your
+      // customer using error.message.
+      if (result.error) {
+        alert(result.error.message)
+      }
+    })
+    .catch(function (error) {
+      console.error("Error:", error);
+    });
+}
+
+
+
 
 newBrickButton.href = "success.html";
 newBrickButton.href = "cancel.html";
